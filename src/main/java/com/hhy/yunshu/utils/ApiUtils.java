@@ -7,7 +7,9 @@ import com.xxl.job.core.context.XxlJobHelper;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -16,6 +18,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
 
 import javax.net.ssl.SSLContext;
@@ -97,14 +100,14 @@ public class ApiUtils {
             // 3.获取token
             request = new HttpPost("http://33.69.3.216/api/login/Authentication/get_token");
             // 添加请求参数
-            data = new HashMap<>(5);
-            data.put("code",result.get("code").toString());
-            data.put("url","http://33.69.3.216/api");
-            data.put("client_secret","c31b32364ce19ca8fcd150a417ecce58");
-            data.put("client_id","api");
-            data.put("redirect_uri","http://33.69.3.216/oauth");
-            entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
-            ((HttpPost) request).setEntity(entity);
+            List<NameValuePair> parameters = new ArrayList<>(5);
+            parameters.add(new BasicNameValuePair("code",result.get("code").toString()));
+            parameters.add(new BasicNameValuePair("url","http://33.69.3.216/api"));
+            parameters.add(new BasicNameValuePair("client_secret","c31b32364ce19ca8fcd150a417ecce58"));
+            parameters.add(new BasicNameValuePair("client_id","api"));
+            parameters.add(new BasicNameValuePair("redirect_uri","http://33.69.3.216/oauth"));
+            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(parameters, StandardCharsets.UTF_8);
+            ((HttpPost) request).setEntity(formEntity);
             request.setHeaders(this.getHttpHeaders());
             response = client.execute(request);
             statusCode = response.getStatusLine().getStatusCode();

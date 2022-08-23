@@ -1,0 +1,40 @@
+server:
+  port: 20203
+spring:
+  application:
+    name: yunShuWeightJour
+  profiles:
+    active:
+      - dev
+    include:
+      - mysql
+  redis:
+    database: ${com.environment.redis.database}
+    host: ${com.environment.redis.host}
+    port: ${com.environment.redis.port}
+    password: ${com.environment.redis.password}
+    jedis:
+      pool:
+        # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 50
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: 3000
+        # 连接池中的最大空闲连接
+        max-idle: 30
+        # 连接池中的最小空闲连接
+        min-idle: 10
+    # 连接超时时间（毫秒）
+    timeout: 3000
+  jackson:
+    time-zone: GMT+8 #时区
+    serialization:
+      write-dates-as-timestamps: true #springboot 2.0以上版本默认返回string,修改转为long
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: false #驼峰自动转换 user_name ==> userName
+  mapper-locations: classpath*:com/**/mapper/*Mapper.xml
+
+# log config
+logging:
+  config: classpath:logback.xml

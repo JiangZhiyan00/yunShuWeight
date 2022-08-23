@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hhy.yunshu.weightJour.mapper.IWeightJourMapper">
+
+	<select id="queryAllOverWeightList" resultType="com.hhy.yunshu.weightJour.entity.WeightJour">
+		SELECT
+			tt.station_name station,
+			tt.centre_name manageCenter,
+			t.vc_license_num license,
+			t.n_license_color color,
+			t.n_vehicle_class vehicleType,
+			t.n_date date,
+			lpad(max(t.n_time),6,0) hourMinuteSecond,
+			max(n_total_weight) weightKg
+		FROM
+			`weight_jour` t
+		join station_info tt on left(t.n_lane_num,4) = tt.station_code
+		WHERE
+			t.n_over_weight > 0 and t.n_over_weight / t.n_weight_limit > 0.05
+		  and t.n_vehicle_class in (0,11,12,13,14,15,16)
+		  and t.vc_license_num not in ('默A00000','浙A00000')
+		  and length(ifnull(tt.centre_name,'')) > 0
+		group by
+			tt.station_name,tt.centre_name,t.vc_license_num,t.n_license_color,t.n_vehicle_class,t.n_date
+	</select>
+
+	<select id="queryOverWeightListByCenter" parameterType="java.lang.String" resultType="com.hhy.yunshu.weightJour.entity.WeightJour">
+		SELECT
+			tt.station_name station,
+			tt.centre_name manageCenter,
+			t.vc_license_num license,
+			t.n_license_color color,
+			t.n_vehicle_class vehicleType,
+			t.n_date date,
+			lpad(max(t.n_time),6,0) hourMinuteSecond,
+			max(n_total_weight) weightKg
+		FROM
+			`weight_jour` t
+				join station_info tt on left(t.n_lane_num,4) = tt.station_code
+		WHERE
+			t.n_over_weight > 0 and t.n_over_weight / t.n_weight_limit > 0.05
+		  and t.n_vehicle_class in (0,11,12,13,14,15,16)
+		  and t.vc_license_num not in ('默A00000','浙A00000')
+		  and length(ifnull(tt.centre_name,'')) > 0
+		  <if test="centerName != null and centerName != ''">
+			  and tt.centre_name = #{centerName}
+		  </if>
+		group by
+			tt.station_name,tt.centre_name,t.vc_license_num,t.n_license_color,t.n_vehicle_class,t.n_date
+	</select>
+
+</mapper>

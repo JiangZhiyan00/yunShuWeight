@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${com.environment.db-master-url}
+    username: ${com.environment.db-master-name}
+    password: ${com.environment.db-master-password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 使用druid数据源
+    type: com.zaxxer.hikari.HikariDataSource
+    #####datasource druid pool
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 30
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: HiKariCP
+      max-lifetime: 900000
+      connection-timeout: 10000
+      connection-test-query: SELECT 1
+      validation-timeout: 1000

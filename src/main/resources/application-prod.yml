@@ -1,0 +1,24 @@
+com:
+  environment:
+    profile: prod
+    db-master-url: jdbc:mysql://33.69.6.167:3306/station_info?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&serverTimezone=GMT%2B8
+    db-master-name: root
+    db-master-password: Td@123456
+    redis:
+      database: 0
+      host: 33.69.3.74
+      port: 6379
+      password: 123456
+
+xxl:
+  job:
+    admin:
+      addresses: http://33.69.2.106:9998/xxl-job-admin
+    accessToken:
+    executor:
+      appname: yunShuWeightJour
+      address:
+      ip:
+      port: 20248
+      logpath: /data/applogs/yunShu/yunShuWeightJour
+      logretentiondays: 366

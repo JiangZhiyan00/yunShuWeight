@@ -95,14 +95,16 @@ public class ApiUtils {
                 throw new RuntimeException("获取code,服务器返回错误:" + result.get("errmsg"));
             }
             // 3.获取token
-            uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token");
+            request = new HttpPost("http://33.69.3.216/api/login/Authentication/get_token");
             // 添加请求参数
-            uriBuilder.addParameter("code",result.get("code").toString());
-            uriBuilder.addParameter("url","http://33.69.3.216/api");
-            uriBuilder.addParameter("client_secret","c31b32364ce19ca8fcd150a417ecce58");
-            uriBuilder.addParameter("client_id","api");
-            uriBuilder.addParameter("redirect_uri","http://33.69.3.216/oauth");
-            request = new HttpGet(uriBuilder.build());
+            data = new HashMap<>(5);
+            data.put("code",result.get("code").toString());
+            data.put("url","http://33.69.3.216/api");
+            data.put("client_secret","c31b32364ce19ca8fcd150a417ecce58");
+            data.put("client_id","api");
+            data.put("redirect_uri","http://33.69.3.216/oauth");
+            entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
+            ((HttpPost) request).setEntity(entity);
             request.setHeaders(this.getHttpHeaders());
             response = client.execute(request);
             statusCode = response.getStatusLine().getStatusCode();

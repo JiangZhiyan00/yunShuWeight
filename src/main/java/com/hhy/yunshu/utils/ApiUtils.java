@@ -95,13 +95,12 @@ public class ApiUtils {
                 throw new RuntimeException("获取code,云枢返回错误:" + result.get("errmsg"));
             }
             // 3.获取token
-            uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token");
-            // 添加请求参数
-            uriBuilder.addParameter("code",result.get("code").toString());
-            uriBuilder.addParameter("url","http://33.69.3.216/api");
-            uriBuilder.addParameter("client_secret","c31b32364ce19ca8fcd150a417ecce58");
-            uriBuilder.addParameter("client_id","api");
-            uriBuilder.addParameter("redirect_uri","http://33.69.3.216/oauth");
+            uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token")
+                    .setParameter("code",result.get("code").toString())
+                    .setParameter("url","http://33.69.3.216/api")
+                    .setParameter("client_secret","c31b32364ce19ca8fcd150a417ecce58")
+                    .setParameter("client_id","api")
+                    .setParameter("redirect_uri","http://33.69.3.216/oauth");
             request = new HttpGet(uriBuilder.build());
             request.setHeaders(this.getHttpHeaders());
             response = client.execute(request);
@@ -122,8 +121,7 @@ public class ApiUtils {
      * @return 密文密码
      */
     private String encrypt(String publicKeyStr, String password) {
-        return new RSA(null,publicKeyStr)
-                .encryptBase64(password, StandardCharsets.UTF_8, KeyType.PublicKey);
+        return new RSA(null,publicKeyStr).encryptBase64(password, StandardCharsets.UTF_8, KeyType.PublicKey);
     }
 
     /**

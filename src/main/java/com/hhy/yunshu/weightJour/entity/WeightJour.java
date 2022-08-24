@@ -108,7 +108,7 @@ public class WeightJour implements Serializable {
 		if (StrUtil.isNotBlank(vehicleType)) {
 			this.vehicleType = VehicleTypeEnum.getTypeValue(Integer.parseInt(vehicleType));
 		}
-		this.weightTon = BigDecimal.valueOf(weightKg).divide(BigDecimal.valueOf(1000), RoundingMode.HALF_UP);
+		this.weightTon = BigDecimal.valueOf(weightKg).divide(BigDecimal.valueOf(1000),2, RoundingMode.HALF_UP);
 		if (date != 0 && StrUtil.isNotBlank(hourMinuteSecond)) {
 			this.findTime = DateUtil.parse(date + hourMinuteSecond,"yyyyMMddHHmmss");
 			if (StrUtil.isNotBlank(station)) {

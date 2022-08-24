@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -107,7 +108,7 @@ public class WeightJour implements Serializable {
 		if (StrUtil.isNotBlank(vehicleType)) {
 			this.vehicleType = VehicleTypeEnum.getTypeValue(Integer.parseInt(vehicleType));
 		}
-		this.weightTon = BigDecimal.valueOf(weightKg / 1000);
+		this.weightTon = BigDecimal.valueOf(weightKg / 1000).setScale(2, RoundingMode.HALF_UP);
 		if (date != 0 && StrUtil.isNotBlank(hourMinuteSecond)) {
 			this.findTime = DateUtil.parse(date + hourMinuteSecond,"yyyyMMddHHmmss");
 			if (StrUtil.isNotBlank(station)) {

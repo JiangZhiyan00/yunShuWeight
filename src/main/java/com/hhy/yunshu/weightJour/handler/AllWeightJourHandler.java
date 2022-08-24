@@ -52,10 +52,10 @@ public class AllWeightJourHandler implements IBaseHandler {
             // 3.与云枢原有数据比较并插入云枢表单
             for (WeightJour weightJour : weightJours) {
                 Optional<Map<String, Object>> any = formData.parallelStream().filter(fd ->
-                        Objects.equals(fd.get("DeptSingle1660206821779").toString(), weightJour.getStation())
-                                && Objects.equals(fd.get("DeptSingle1660206826072").toString(), weightJour.getManageCenter())
+                        Objects.equals(fd.get("Dropdown1660206610287").toString(), weightJour.getStation())
+                                && Objects.equals(fd.get("ShortText1660206831121").toString(), weightJour.getManageCenter())
                                 && Objects.equals(fd.get("ShortText1660206630982").toString(), weightJour.getLicense())
-                                && Objects.equals(fd.get("Date1660206606203").toString(), String.valueOf(weightJour.getDate()))).findAny();
+                                && Objects.equals(fd.get("Date1660206606203").toString().substring(0,8), String.valueOf(weightJour.getDate()))).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();
                     weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.endOfMonth(new Date())));
@@ -74,7 +74,7 @@ public class AllWeightJourHandler implements IBaseHandler {
      * @return 云枢要求的格式的Map
      */
     private Map<String, Object> objToYunShuData(WeightJour weightJour) {
-        return new HashMap<String,Object>(19) {
+        return new HashMap<String,Object>(17) {
             {
                 put("id",null);//id
                 put("Radio1660206658018",weightJour.getNotify());//是否通知执法部门
@@ -89,9 +89,9 @@ public class AllWeightJourHandler implements IBaseHandler {
                 put("ShortText1660206598080",weightJour.getSerialNumber());//流水号
                 put("Number1660206852768",weightJour.getImportNum());//自动导入特有字段
                 put("version",0);//版本号
-                put("DeptSingle1660206821779",weightJour.getStation());//收费站
+                // put("DeptSingle1660206821779",weightJour.getStation());//收费站
                 put("ShortText1660206843833",weightJour.getDate());//称重日期
-                put("DeptSingle1660206826072",weightJour.getManageCenter());//管理中心
+                // put("DeptSingle1660206826072",weightJour.getManageCenter());//管理中心
                 put("ShortText1660206630982",weightJour.getLicense());//车牌号码
                 put("ShortText1660206831121",weightJour.getManageCenter());//管理中心文本
                 put("Number1660206635250",weightJour.getWeightTon());//称重数据(吨)
@@ -108,7 +108,7 @@ public class AllWeightJourHandler implements IBaseHandler {
             {
                 put("op","Eq");
                 put("propertyCode","Number1660206852768");
-                put("propertyType",0);//TODO 数字类型不确定是不是0
+                put("propertyType",0);
                 put("propertyValue",666);
                 put("propertyValueName","");
             }

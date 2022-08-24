@@ -44,11 +44,9 @@ public class AllWeightJourHandler implements IBaseHandler {
                             Comparator.comparing(o -> o.getManageCenter() + o.getStation() + o.getLicense() + o.getDate()))), ArrayList::new));
             XxlJobHelper.log("去重后的数据库数据共:"+weightJours.size()+"条");
 
-
             // 2.获取云枢表单近15天已推送数据
-            List<Map<String, Object>> filters = this.getFilters();
             ApiUtils api = new ApiUtils(SCHEMA_CODE);
-            List<Map<String, Object>> formData = api.getFormData(filters, 0, Integer.MAX_VALUE);
+            List<Map<String, Object>> formData = api.getFormData(this.getFilters(), 0, Integer.MAX_VALUE);
             XxlJobHelper.log("近15天的云枢数据共:" + formData.size() + "条");
 
             // 3.与云枢原有数据比较并插入云枢表单
@@ -89,7 +87,7 @@ public class AllWeightJourHandler implements IBaseHandler {
                 put("ShortText1660206818078",weightJour.getAssistField());//辅助字段
                 put("LongText1660206685833",weightJour.getRemark());//备注
                 put("ShortText1660206598080",weightJour.getSerialNumber());//流水号
-                put("Number1660206852768",weightJour.getSerialNumber());//流水号
+                put("Number1660206852768",weightJour.getImportNum());//自动导入特有字段
                 put("version",0);//版本号
                 put("DeptSingle1660206821779",weightJour.getStation());//收费站
                 put("ShortText1660206843833",weightJour.getDate());//称重日期

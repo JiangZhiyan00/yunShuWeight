@@ -57,7 +57,7 @@ public class AllWeightJourHandler implements IBaseHandler {
                     return Objects.equals(data.get("Dropdown1660206610287").toString(), weightJour.getStation())
                             && Objects.equals(data.get("ShortText1660206831121").toString(), weightJour.getManageCenter())
                             && Objects.equals(data.get("ShortText1660206630982").toString(), weightJour.getLicense())
-                            && Objects.equals(data.get("Date1660206606203").toString().substring(0, 8), String.valueOf(weightJour.getDate()));
+                            && Objects.equals(DateUtil.format(DateUtil.parse(data.get("Date1660206606203").toString(),"yyyy-MM-dd"),"yyyyMMdd"), String.valueOf(weightJour.getDate()));
                 }).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();

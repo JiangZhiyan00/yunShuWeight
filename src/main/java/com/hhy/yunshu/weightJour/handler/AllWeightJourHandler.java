@@ -58,7 +58,7 @@ public class AllWeightJourHandler implements IBaseHandler {
                                 && Objects.equals(fd.get("Date1660206606203").toString(), String.valueOf(weightJour.getDate()))).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();
-                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),YUNSHU_OVERWEIGHT_PREFIX,4,DateUtil.endOfMonth(new Date())));
+                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.endOfMonth(new Date())));
                     XxlJobHelper.log("新增的数据:" + weightJour);
                     api.createData(objToYunShuData(weightJour));
                 }

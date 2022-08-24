@@ -89,8 +89,6 @@
                 <configuration>
                     <mainClass>com.hhy.yunshu.YunShuWeightJourApplication</mainClass><!-- 指定SpringBoot的main入口 -->
                     <includeSystemScope>true</includeSystemScope>
-                    <source>1.8</source>
-                    <target>1.8</target>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

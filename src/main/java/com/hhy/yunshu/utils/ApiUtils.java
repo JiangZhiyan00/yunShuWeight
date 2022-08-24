@@ -2,6 +2,9 @@ package com.hhy.yunshu.utils;
 
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.xxl.job.core.context.XxlJobHelper;
 import org.apache.http.Header;
@@ -57,57 +60,35 @@ public class ApiUtils {
     /**
      * 获取token
      */
-    private String initToken() throws Exception {
+    private String initToken() {
         String accessToken = token;
         if (token == null) {
-            try (CloseableHttpClient client = HttpClients.createDefault()) {
-                // 1.获取index和key
-                URIBuilder uriBuilder = new URIBuilder("http://33.69.3.216/api/public/getKey");
-                HttpRequestBase request = new HttpGet(uriBuilder.build());
-                HttpResponse response = client.execute(request);
-                int statusCode = response.getStatusLine().getStatusCode();
-                Map<String, Object> result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
-                if (statusCode != 200) {
-                    throw new RuntimeException("获取index,key错误:" + result);
-                }
-                // 2.获取code
-                request = new HttpPost("http://33.69.3.216/api/login/Authentication/get_code");
-                Map<String, Object> data = new HashMap<>(6);
-                data.put("username", USERNAME);
-                data.put("password", this.encrypt(result.get("key").toString(), PASSWORD));
-                data.put("url", "http://33.69.3.216/api/login?redirect_uri=http://33.69.3.216/api/oauth/authorize?client_id=api&response_type=code&scope=read&redirect_uri=http://33.69.3.216/oauth");
-                data.put("portal", true);
-                data.put("corpId", CORP_ID);
-                data.put("index", result.get("index"));
-                HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
-                ((HttpPost) request).setEntity(entity);
-                request.setHeaders(this.getHttpHeaders());
-                response = client.execute(request);
-                statusCode = response.getStatusLine().getStatusCode();
-                result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
-                if (statusCode != 200) {
-                    throw new RuntimeException("获取code错误:" + result);
-                }
-                if (Integer.parseInt(result.get("errcode").toString()) != 200) {
-                    throw new RuntimeException("获取code,云枢返回错误:" + result.get("errmsg"));
-                }
-                // 3.获取token
-                uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token")
-                        .setParameter("code", result.get("code").toString())
-                        .setParameter("url", "http://33.69.3.216/api")
-                        .setParameter("client_secret", "c31b32364ce19ca8fcd150a417ecce58")
-                        .setParameter("client_id", "api")
-                        .setParameter("redirect_uri", "http://33.69.3.216/oauth");
-                request = new HttpGet(uriBuilder.build());
-                request.setHeaders(this.getHttpHeaders());
-                response = client.execute(request);
-                statusCode = response.getStatusLine().getStatusCode();
-                result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
-                if (statusCode != 200 || !(boolean) result.get("success")) {
-                    throw new RuntimeException("获取token错误:" + result);
-                }
-                accessToken = result.get("access_token").toString();
-            }
+            // 1.获取index和key
+            JSONObject result = JSONObject.parseObject(HttpUtil.get("http://33.69.3.216/api/public/getKey"));
+            // 2.获取code
+            Map<String, Object> data = new HashMap<>(6);
+            data.put("username", USERNAME);
+            data.put("password", this.encrypt(result.get("key").toString(), PASSWORD));
+            data.put("url", "http://33.69.3.216/api/login?redirect_uri=http://33.69.3.216/api/oauth/authorize?client_id=api&response_type=code&scope=read&redirect_uri=http://33.69.3.216/oauth");
+            data.put("portal", true);
+            data.put("corpId", CORP_ID);
+            data.put("index", result.get("index"));
+            String body = HttpRequest.post("http://33.69.3.216/api/login/Authentication/get_code")
+                    .header("Content-Type", "application/json;charset=utf-8")
+                    .body((JSON.toJSONString(data))).execute().body();
+            result = JSONObject.parseObject(body);
+            // 3.获取token
+            data = new HashMap<>(5);
+            data.put("code", result.get("code"));
+            data.put("url", "http://33.69.3.216/api");
+            data.put("client_secret", "c31b32364ce19ca8fcd150a417ecce58");
+            data.put("client_id", "api");
+            data.put("redirect_uri", "http://33.69.3.216/oauth");
+            body = HttpRequest.get("http://33.69.3.216/api/login/Authentication/get_token")
+                    .header("Content-Type", "application/json;charset=utf-8")
+                    .form(data).execute().body();
+            result = JSONObject.parseObject(body);
+            accessToken = result.get("access_token").toString();
         }
         return accessToken;
     }
@@ -365,5 +346,36 @@ public class ApiUtils {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static void main(String[] args) {
+        // 1.获取index和key
+        JSONObject result = JSONObject.parseObject(HttpUtil.get("http://33.69.3.216/api/public/getKey"));
+        // 2.获取code
+        Map<String, Object> data = new HashMap<>(6);
+        data.put("username", USERNAME);
+        String pwd = new RSA(null, result.get("key").toString()).encryptBase64(PASSWORD, StandardCharsets.UTF_8, KeyType.PublicKey);
+        data.put("password", pwd);
+        data.put("url", "http://33.69.3.216/api/login?redirect_uri=http://33.69.3.216/api/oauth/authorize?client_id=api&response_type=code&scope=read&redirect_uri=http://33.69.3.216/oauth");
+        data.put("portal", true);
+        data.put("corpId", CORP_ID);
+        data.put("index", result.get("index"));
+        String body = HttpRequest.post("http://33.69.3.216/api/login/Authentication/get_code")
+                .header("Content-Type", "application/json;charset=utf-8")
+                .body(JSON.toJSONString(data)).execute().body();
+        result = JSONObject.parseObject(body);
+        // 3.获取token
+        data = new HashMap<>(5);
+        data.put("code", result.get("code"));
+        data.put("url", "http://33.69.3.216/api");
+        data.put("client_secret", "c31b32364ce19ca8fcd150a417ecce58");
+        data.put("client_id", "api");
+        data.put("redirect_uri", "http://33.69.3.216/oauth");
+        body = HttpRequest.get("http://33.69.3.216/api/login/Authentication/get_token")
+                .header("Content-Type", "application/json;charset=utf-8")
+                .form(data).execute().body();
+        result = JSONObject.parseObject(body);
+        String accessToken = result.get("access_token").toString();
+        System.out.println(accessToken);
     }
 }

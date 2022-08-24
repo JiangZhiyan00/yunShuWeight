@@ -7,18 +7,15 @@ import com.xxl.job.core.context.XxlJobHelper;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.ssl.SSLContextBuilder;
 
-import javax.net.ssl.SSLContext;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -63,53 +60,54 @@ public class ApiUtils {
     private String initToken() throws Exception {
         String accessToken = token;
         if (token == null) {
-            // 1.获取index和key
-            URIBuilder uriBuilder = new URIBuilder("http://33.69.3.216/api/public/getKey");
-            HttpRequestBase request = new HttpGet(uriBuilder.build());
-            HttpClient client = this.getSSLHttpClient();
-            HttpResponse response = client.execute(request);
-            int statusCode = response.getStatusLine().getStatusCode();
-            Map<String, Object> result = JSONObject.parseObject(response.getEntity().getContent(),Map.class);
-            if (statusCode != 200) {
-                throw new RuntimeException("获取index,key错误:" + result);
+            try (CloseableHttpClient client = HttpClients.createDefault()) {
+                // 1.获取index和key
+                URIBuilder uriBuilder = new URIBuilder("http://33.69.3.216/api/public/getKey");
+                HttpRequestBase request = new HttpGet(uriBuilder.build());
+                HttpResponse response = client.execute(request);
+                int statusCode = response.getStatusLine().getStatusCode();
+                Map<String, Object> result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
+                if (statusCode != 200) {
+                    throw new RuntimeException("获取index,key错误:" + result);
+                }
+                // 2.获取code
+                request = new HttpPost("http://33.69.3.216/api/login/Authentication/get_code");
+                Map<String, Object> data = new HashMap<>(6);
+                data.put("username", USERNAME);
+                data.put("password", this.encrypt(result.get("key").toString(), PASSWORD));
+                data.put("url", "http://33.69.3.216/api/login?redirect_uri=http://33.69.3.216/api/oauth/authorize?client_id=api&response_type=code&scope=read&redirect_uri=http://33.69.3.216/oauth");
+                data.put("portal", true);
+                data.put("corpId", CORP_ID);
+                data.put("index", result.get("index"));
+                HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
+                ((HttpPost) request).setEntity(entity);
+                request.setHeaders(this.getHttpHeaders());
+                response = client.execute(request);
+                statusCode = response.getStatusLine().getStatusCode();
+                result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
+                if (statusCode != 200) {
+                    throw new RuntimeException("获取code错误:" + result);
+                }
+                if (Integer.parseInt(result.get("errcode").toString()) != 200) {
+                    throw new RuntimeException("获取code,云枢返回错误:" + result.get("errmsg"));
+                }
+                // 3.获取token
+                uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token")
+                        .setParameter("code", result.get("code").toString())
+                        .setParameter("url", "http://33.69.3.216/api")
+                        .setParameter("client_secret", "c31b32364ce19ca8fcd150a417ecce58")
+                        .setParameter("client_id", "api")
+                        .setParameter("redirect_uri", "http://33.69.3.216/oauth");
+                request = new HttpGet(uriBuilder.build());
+                request.setHeaders(this.getHttpHeaders());
+                response = client.execute(request);
+                statusCode = response.getStatusLine().getStatusCode();
+                result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
+                if (statusCode != 200 || !(boolean) result.get("success")) {
+                    throw new RuntimeException("获取token错误:" + result);
+                }
+                accessToken = result.get("access_token").toString();
             }
-            // 2.获取code
-            request = new HttpPost("http://33.69.3.216/api/login/Authentication/get_code");
-            Map<String,Object> data = new HashMap<>(6);
-            data.put("username",USERNAME);
-            data.put("password",this.encrypt(result.get("key").toString(),PASSWORD));
-            data.put("url","http://33.69.3.216/api/login?redirect_uri=http://33.69.3.216/api/oauth/authorize?client_id=api&response_type=code&scope=read&redirect_uri=http://33.69.3.216/oauth");
-            data.put("portal",true);
-            data.put("corpId",CORP_ID);
-            data.put("index",result.get("index"));
-            HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
-            ((HttpPost) request).setEntity(entity);
-            request.setHeaders(this.getHttpHeaders());
-            response = client.execute(request);
-            statusCode = response.getStatusLine().getStatusCode();
-            result = JSONObject.parseObject(response.getEntity().getContent(),Map.class);
-            if (statusCode != 200) {
-                throw new RuntimeException("获取code错误:" + result);
-            }
-            if (Integer.parseInt(result.get("errcode").toString()) != 200) {
-                throw new RuntimeException("获取code,云枢返回错误:" + result.get("errmsg"));
-            }
-            // 3.获取token
-            uriBuilder = new URIBuilder("http://33.69.3.216/api/login/Authentication/get_token")
-                    .setParameter("code",result.get("code").toString())
-                    .setParameter("url","http://33.69.3.216/api")
-                    .setParameter("client_secret","c31b32364ce19ca8fcd150a417ecce58")
-                    .setParameter("client_id","api")
-                    .setParameter("redirect_uri","http://33.69.3.216/oauth");
-            request = new HttpGet(uriBuilder.build());
-            request.setHeaders(this.getHttpHeaders());
-            response = client.execute(request);
-            statusCode = response.getStatusLine().getStatusCode();
-            result = JSONObject.parseObject(response.getEntity().getContent(),Map.class);
-            if (statusCode != 200 || !(boolean) result.get("success")) {
-                throw new RuntimeException("获取token错误:" + result);
-            }
-            accessToken = result.get("access_token").toString();
         }
         return accessToken;
     }
@@ -122,16 +120,6 @@ public class ApiUtils {
      */
     private String encrypt(String publicKeyStr, String password) {
         return new RSA(null,publicKeyStr).encryptBase64(password, StandardCharsets.UTF_8, KeyType.PublicKey);
-    }
-
-    /**
-     * 获取信任所有的http客户端
-     */
-    private HttpClient getSSLHttpClient() throws Exception {
-        //信任所有
-        SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, (chain, authType) -> true).build();
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
-        return HttpClients.custom().setSSLSocketFactory(sslsf).build();
     }
 
     /**
@@ -154,44 +142,45 @@ public class ApiUtils {
      * @param data   - 请求的数据
      */
     private Object sendRequest(String method, String url, Map<String, Object> data) throws Exception {
-        HttpClient client = this.getSSLHttpClient();
-        Header[] headers = this.getHttpHeaders();
-        HttpRequestBase request;
-        method = method.toUpperCase();
-        if ("GET".equalsIgnoreCase(method)) {
-            // GET请求
-            URIBuilder uriBuilder = new URIBuilder(url);
-            if (data != null) {
-                // 添加请求参数
-                for (Map.Entry<String, Object> entry : data.entrySet()) {
-                    uriBuilder.addParameter(entry.getKey(), (String) entry.getValue());
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            Header[] headers = this.getHttpHeaders();
+            HttpRequestBase request;
+            method = method.toUpperCase();
+            if ("GET".equalsIgnoreCase(method)) {
+                // GET请求
+                URIBuilder uriBuilder = new URIBuilder(url);
+                if (data != null) {
+                    // 添加请求参数
+                    for (Map.Entry<String, Object> entry : data.entrySet()) {
+                        uriBuilder.addParameter(entry.getKey(), (String) entry.getValue());
+                    }
                 }
+                request = new HttpGet(uriBuilder.build());
+            } else if ("POST".equalsIgnoreCase(method)) {
+                // POST请求
+                request = new HttpPost(url);
+                HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
+                ((HttpPost) request).setEntity(entity);
+            } else if ("DELETE".equalsIgnoreCase(method)) {
+                // DELETE请求
+                request = new HttpDeleteWithBody(url);
+                HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
+                ((HttpDeleteWithBody) request).setEntity(entity);
+            } else {
+                throw new RuntimeException("不支持的HTTP请求方式");
             }
-            request = new HttpGet(uriBuilder.build());
-        } else if ("POST".equalsIgnoreCase(method)) {
-            // POST请求
-            request = new HttpPost(url);
-            HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
-            ((HttpPost) request).setEntity(entity);
-        } else if ("DELETE".equalsIgnoreCase(method)) {
-            // DELETE请求
-            request = new HttpDeleteWithBody(url);
-            HttpEntity entity = new StringEntity(JSONObject.toJSONString(data), StandardCharsets.UTF_8);
-            ((HttpDeleteWithBody) request).setEntity(entity);
-        } else {
-            throw new RuntimeException("不支持的HTTP请求方式");
-        }
-        // 设置请求头
-        request.setHeaders(headers);
-        // 发送请求并获取返回结果
-        HttpResponse response = client.execute(request);
-        int statusCode = response.getStatusLine().getStatusCode();
-        Map<String, Object> result = JSONObject.parseObject(response.getEntity().getContent(),Map.class);
-        if (statusCode >= 400) {
-            throw new RuntimeException("请求错误，Error Code: " + result.get("errcode") + ", Error Msg: " + result.get("errmsg"));
-        } else {
-            // 处理返回结果
-            return result;
+            // 设置请求头
+            request.setHeaders(headers);
+            // 发送请求并获取返回结果
+            HttpResponse response = client.execute(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            Map<String, Object> result = JSONObject.parseObject(response.getEntity().getContent(), Map.class);
+            if (statusCode >= 400) {
+                throw new RuntimeException("请求错误，Error Code: " + result.get("errcode") + ", Error Msg: " + result.get("errmsg"));
+            } else {
+                // 处理返回结果
+                return result;
+            }
         }
     }
 

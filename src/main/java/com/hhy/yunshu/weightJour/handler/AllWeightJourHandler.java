@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@SuppressWarnings("unchecked")
 public class AllWeightJourHandler implements IBaseHandler {
 
     private static final String SCHEMA_CODE = "incontrolrecord";
@@ -51,11 +52,13 @@ public class AllWeightJourHandler implements IBaseHandler {
 
             // 3.与云枢原有数据比较并插入云枢表单
             for (WeightJour weightJour : weightJours) {
-                Optional<Map<String, Object>> any = formData.parallelStream().filter(fd ->
-                        Objects.equals(fd.get("Dropdown1660206610287").toString(), weightJour.getStation())
-                                && Objects.equals(fd.get("ShortText1660206831121").toString(), weightJour.getManageCenter())
-                                && Objects.equals(fd.get("ShortText1660206630982").toString(), weightJour.getLicense())
-                                && Objects.equals(fd.get("Date1660206606203").toString().substring(0,8), String.valueOf(weightJour.getDate()))).findAny();
+                Optional<Map<String, Object>> any = formData.parallelStream().filter(fd -> {
+                    Map<String,Object> data = (Map<String, Object>) fd.get("data");
+                    return Objects.equals(data.get("Dropdown1660206610287").toString(), weightJour.getStation())
+                            && Objects.equals(data.get("ShortText1660206831121").toString(), weightJour.getManageCenter())
+                            && Objects.equals(data.get("ShortText1660206630982").toString(), weightJour.getLicense())
+                            && Objects.equals(data.get("Date1660206606203").toString().substring(0, 8), String.valueOf(weightJour.getDate()));
+                }).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();
                     weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.endOfMonth(new Date())));

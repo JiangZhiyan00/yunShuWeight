@@ -60,7 +60,7 @@ public class HuZhouWeightJourHandler implements IBaseHandler {
                 }).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();
-                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4, DateUtil.endOfMonth(new Date())));
+                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4, DateUtil.nextMonth()));
                     XxlJobHelper.log("新增的数据:" + weightJour);
                     api.createData(objToYunShuData(weightJour));
                 }

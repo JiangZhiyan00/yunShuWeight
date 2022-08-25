@@ -1,7 +1,6 @@
 package com.hhy.yunshu.weightJour.handler;
 
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
 import com.hhy.yunshu.base.api.IBaseHandler;
 import com.hhy.yunshu.utils.ApiUtils;
 import com.hhy.yunshu.utils.AutoIncrementNoUtils;
@@ -50,6 +49,7 @@ public class AllWeightJourHandler implements IBaseHandler {
             List<Map<String, Object>> formData = api.getFormData(this.getFilters(), 0, Integer.MAX_VALUE);
             XxlJobHelper.log("近15天的云枢数据共:" + formData.size() + "条");
 
+            // api.deleteData(formData.parallelStream().map(m -> (String) ((Map) m.get("data")).get("id")).toArray(String[]::new));
             // 3.与云枢原有数据比较并插入云枢表单
             for (WeightJour weightJour : weightJours) {
                 Optional<Map<String, Object>> any = formData.parallelStream().filter(fd -> {
@@ -61,7 +61,7 @@ public class AllWeightJourHandler implements IBaseHandler {
                 }).findAny();
                 if (!any.isPresent()) {
                     weightJour.fillFields();
-                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.endOfMonth(new Date())));
+                    weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.nextMonth()));
                     XxlJobHelper.log("新增的数据:" + weightJour);
                     api.createData(objToYunShuData(weightJour));
                 }

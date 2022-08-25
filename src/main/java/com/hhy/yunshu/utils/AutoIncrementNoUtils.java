@@ -27,20 +27,11 @@ public class AutoIncrementNoUtils {
      * @return 自增流水
      */
     public String getAutoIncrementNo(String key, String prefix, int length, Date expireAt) {
-        expireAt = expireAt == null ? DateUtil.endOfDay(new Date()) : expireAt;
-        RedisAtomicLong noCounter;
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
-            noCounter = new RedisAtomicLong(key, Objects.requireNonNull(redisTemplate.getConnectionFactory()));
-        } else {
-            noCounter = new RedisAtomicLong(key, Objects.requireNonNull(redisTemplate.getConnectionFactory()));
-            //本月最后时刻过期
-            noCounter.expireAt(expireAt);
-        }
+        expireAt = expireAt == null ? DateUtil.nextMonth() : expireAt;
+        RedisAtomicLong noCounter = new RedisAtomicLong(key, Objects.requireNonNull(redisTemplate.getConnectionFactory()),1L);
+        // 下个月此刻过期
+        noCounter.expireAt(expireAt);
         long increment = noCounter.getAndIncrement();
-        //跳过初始值0,使初始值为1
-        if (increment == 0L) {
-            increment = noCounter.getAndIncrement();
-        }
         String no = StrUtil.padPre(String.valueOf(increment), length, '0');
         return StrUtil.isBlank(prefix) ? no : prefix + no;
     }

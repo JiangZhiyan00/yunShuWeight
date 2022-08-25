@@ -28,10 +28,14 @@ public class AutoIncrementNoUtils {
      */
     public String getAutoIncrementNo(String key, String prefix, int length, Date expireAt) {
         expireAt = expireAt == null ? DateUtil.nextMonth() : expireAt;
-        RedisAtomicLong noCounter = new RedisAtomicLong(key, Objects.requireNonNull(redisTemplate.getConnectionFactory()),1L);
+        RedisAtomicLong noCounter = new RedisAtomicLong(key, Objects.requireNonNull(redisTemplate.getConnectionFactory()));
         // 下个月此刻过期
         noCounter.expireAt(expireAt);
         long increment = noCounter.getAndIncrement();
+        //跳过初始值0,使初始值为1
+        if (increment == 0L){
+            increment = noCounter.getAndIncrement();
+        }
         String no = StrUtil.padPre(String.valueOf(increment), length, '0');
         return StrUtil.isBlank(prefix) ? no : prefix + no;
     }

@@ -47,7 +47,7 @@ public class HuZhouWeightJourHandler implements IBaseHandler {
             // 2.获取云枢表单近15天已推送数据
             ApiUtils api = new ApiUtils(SCHEMA_CODE);
             List<Map<String, Object>> formData = api.getFormData(this.getFilters(), 0, Integer.MAX_VALUE);
-            XxlJobHelper.log("近15天的云枢数据共:" + formData.size() + "条");
+            XxlJobHelper.log("近7天的云枢数据共:" + formData.size() + "条");
 
             // 3.与云枢原有数据比较并插入云枢表单
             for (WeightJour weightJour : weightJours) {
@@ -110,15 +110,15 @@ public class HuZhouWeightJourHandler implements IBaseHandler {
             {
                 put("op","Eq");
                 put("propertyCode","Number1660206852768");
-                put("propertyType",0);//TODO 数字类型不确定是不是0
+                put("propertyType",0);
                 put("propertyValue",666);
                 put("propertyValueName","");
             }
         };
         // 近15天的
-        String propertyValue = DateUtil.format(DateUtil.offsetDay(new Date(),-15),"yyyy-MM-dd")
+        String propertyValue = DateUtil.format(DateUtil.offsetDay(new Date(),-7),"yyyy-MM-dd")
                 + ";" + DateUtil.today();
-        Map<String,Object> filterMap2 = new HashMap<String,Object>(5) {
+        Map<String,Object> filterMap2 = new HashMap<String,Object>(4) {
             {
                 put("propertyCode","Date1660206606203");
                 put("propertyType",3);

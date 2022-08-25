@@ -47,10 +47,11 @@ public class AllWeightJourHandler implements IBaseHandler {
             // 2.获取云枢表单近15天已推送数据
             ApiUtils api = new ApiUtils(SCHEMA_CODE);
             List<Map<String, Object>> formData = api.getFormData(this.getFilters(), 0, Integer.MAX_VALUE);
-            XxlJobHelper.log("近15天的云枢数据共:" + formData.size() + "条");
+            XxlJobHelper.log("近7天的云枢数据共:" + formData.size() + "条");
 
             // api.deleteData(formData.parallelStream().map(m -> (String) ((Map) m.get("data")).get("id")).toArray(String[]::new));
             // 3.与云枢原有数据比较并插入云枢表单
+            long createNum = 0L;
             for (WeightJour weightJour : weightJours) {
                 Optional<Map<String, Object>> any = formData.parallelStream().filter(fd -> {
                     Map<String,Object> data = (Map<String, Object>) fd.get("data");
@@ -62,10 +63,12 @@ public class AllWeightJourHandler implements IBaseHandler {
                 if (!any.isPresent()) {
                     weightJour.fillFields();
                     weightJour.setSerialNumber(autoIncrementNoUtils.getAutoIncrementNo(YUNSHU_OVERWEIGHT_PREFIX + weightJour.getAssistField(),weightJour.getAssistField(),4,DateUtil.nextMonth()));
-                    XxlJobHelper.log("新增的数据:" + weightJour);
+                    // XxlJobHelper.log("新增的数据:" + weightJour);
                     api.createData(objToYunShuData(weightJour));
+                    createNum++;
                 }
             }
+            XxlJobHelper.log("共创建:" + createNum + "条超重车数据");
         }catch (Exception e) {
             XxlJobHelper.log("发生异常:" + e.getMessage());
         }
@@ -117,9 +120,9 @@ public class AllWeightJourHandler implements IBaseHandler {
             }
         };
         // 近15天的
-        String propertyValue = DateUtil.format(DateUtil.offsetDay(new Date(),-15),"yyyy-MM-dd")
+        String propertyValue = DateUtil.format(DateUtil.offsetDay(new Date(),-7),"yyyy-MM-dd")
                 + ";" + DateUtil.today();
-        Map<String,Object> filterMap2 = new HashMap<String,Object>(5) {
+        Map<String,Object> filterMap2 = new HashMap<String,Object>(4) {
             {
                 put("propertyCode","Date1660206606203");
                 put("propertyType",3);
@@ -131,4 +134,19 @@ public class AllWeightJourHandler implements IBaseHandler {
         filters.add(filterMap2);
         return filters;
     }
+
+/*    public static void main(String[] args) {
+        ApiUtils api = new ApiUtils(SCHEMA_CODE);
+        while (true) {
+            List<Map<String, Object>> formData = api.getFormData(Collections.emptyList(), 0, 5000);
+            if (!formData.isEmpty()) {
+                String[] ids = formData.parallelStream()
+                        .map(m -> (String) ((Map) m.get("data")).get("id")).toArray(String[]::new);
+                Map<String, Object> stringObjectMap = api.deleteData(ids);
+                System.out.println(stringObjectMap);
+            }else {
+                break;
+            }
+        }
+    }*/
 }
